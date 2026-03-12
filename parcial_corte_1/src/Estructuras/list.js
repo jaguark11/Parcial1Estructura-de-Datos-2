@@ -8,7 +8,7 @@ export class Nodo {
 }
 
 export class ColaPrioridad {
-  #heap = []; // Blindaje: Estado privado
+  #heap = [];
 
   constructor(datos = []) {
     if (datos.length > 0) {
@@ -17,7 +17,7 @@ export class ColaPrioridad {
     }
   }
 
-  #construirHeap() { // Algoritmo de Floyd O(n)
+  #construirHeap() {
     for (let i = Math.floor(this.#heap.length / 2) - 1; i >= 0; i--) {
       this.#hundir(i);
     }
@@ -28,19 +28,17 @@ export class ColaPrioridad {
     return a.nivel - b.nivel;
   }
 
-  insertar(paciente) {
-    this.#heap.push(paciente);
+  insertar(p) {
+    this.#heap.push(p);
     this.#subir(this.#heap.length - 1);
   }
 
   extraerMin() {
     if (this.#heap.length === 0) return null;
+    if (this.#heap.length === 1) return this.#heap.pop();
     const raiz = this.#heap[0];
-    const ultimo = this.#heap.pop();
-    if (this.#heap.length > 0) {
-      this.#heap[0] = ultimo;
-      this.#hundir(0);
-    }
+    this.#heap[0] = this.#heap.pop();
+    this.#hundir(0);
     return raiz;
   }
 
@@ -60,7 +58,7 @@ export class ColaPrioridad {
       let iz = 2 * act + 1, de = 2 * act + 2, m = act;
       if (iz < len && this.#comparar(this.#heap[iz], this.#heap[m]) < 0) m = iz;
       if (de < len && this.#comparar(this.#heap[de], this.#heap[m]) < 0) m = de;
-      if (m === act) break;
+      if (m === actual) break;
       this.#swap(act, m);
       act = m;
     }
@@ -68,10 +66,12 @@ export class ColaPrioridad {
 
   #swap(i, j) { [this.#heap[i], this.#heap[j]] = [this.#heap[j], this.#heap[i]]; }
 
-  getSnapshot() {
+  estaVacia() { return this.#heap.length === 0; }
+
+  obtenerSnapshot() {
     const clon = new ColaPrioridad(this.#heap);
     const res = [];
-    while (!clon.#heap.length == 0) res.push(clon.extraerMin());
+    while (!clon.estaVacia()) res.push(clon.extraerMin());
     return res;
   }
 }

@@ -30,3 +30,4 @@ const ejerciciosCore = ejercicios.slice(0, 2); // slice: Extrae una porción sin
 ejercicios.forEach(ejercicio => console.log('Hoy toca:', ejercicio)); // forEach: Itera sin retornar
 
 console.log('Resultados:', { rutina, pesosLbs, pesosPesados, pesoTotalLifted, ejerciciosCore });
+ 

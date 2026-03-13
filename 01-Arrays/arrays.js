@@ -32,3 +32,4 @@ ejercicios.forEach(ejercicio => console.log('Hoy toca:', ejercicio)); // forEach
 console.log('Resultados:', { rutina, pesosLbs, pesosPesados, pesoTotalLifted, ejerciciosCore });
  
  
+ 

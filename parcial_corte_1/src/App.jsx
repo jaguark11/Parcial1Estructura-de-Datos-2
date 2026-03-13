@@ -1,42 +1,79 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Nodo, ColaPrioridad } from './Estructuras/list.js';
+import React, { useState, useEffect, useRef } from 'react';
+import { Persona, ColaATM } from './logic/cola_prioridad';
+
+const STORAGE_KEY = 'atm_p05_data';
 
 export default function App() {
-  const colaRef = useRef(new ColaPrioridad());
-  const [pacientes, setPacientes] = useState([]);
-  const [actual, setActual] = useState(null);
+  const [datos, setDatos] = useState([]);
+  const colaRef = useRef(new ColaATM());
 
-  const refrescar = () => setPacientes(colaRef.current.obtenerSnapshot());
+  const sincronizar = () => {
+    const snapshots = colaRef.current.exportar_datos();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshots));
+    setDatos(snapshots);
+  };
+
+  const cargar = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return generar_seed();
+      const parsed = JSON.parse(raw);
+      const nueva_cola = new ColaATM();
+      parsed.forEach(p => nueva_cola.encolar(new Persona(p.id, p.nombre, p.monto, p.fecha_llegada)));
+      colaRef.current = nueva_cola;
+      setDatos(nueva_cola.exportar_datos());
+    } catch { generar_seed(); }
+  };
+
+  const generar_seed = () => {
+    const seed_cola = new ColaATM();
+    const base = Date.now();
+    const mock = [
+      ["Ana Perez", 500, -600000], ["Luis Gomez", 200, -300000],
+      ["Juan Paez", 150, 0], ["Ana Maria", 900, -150000], ["Pedro Picapiedra", 50, -450000]
+    ];
+    mock.forEach(([n, m, offset]) => seed_cola.encolar(new Persona(null, n, m, new Date(base + offset))));
+    colaRef.current = seed_cola;
+    sincronizar();
+  };
 
   useEffect(() => {
-    const iniciales = [new Nodo('1', 'Paciente Alfa', 2), new Nodo('2', 'Paciente Beta', 1)];
-    colaRef.current = new ColaPrioridad(iniciales);
-    refrescar();
+    cargar();
+    const handleStorage = (e) => { if (e.key === STORAGE_KEY) cargar(); };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
-  const registrar = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const n = e.target.nom.value, p = e.target.prio.value;
-    colaRef.current.insertar(new Nodo(crypto.randomUUID(), n, p));
-    refrescar();
-    e.target.reset();
+    const form = new FormData(e.target);
+    const random_offset = Math.floor(Math.random() * 3600000) - 1800000; // +/- 30 min
+    try {
+      colaRef.current.encolar(new Persona(null, form.get('nom'), form.get('cant'), new Date(Date.now() + random_offset)));
+      sincronizar();
+      e.target.reset();
+    } catch (err) { alert(err.message); }
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial' }}>
-      <h1>Triage Modular - Corte 1</h1>
-      <form onSubmit={registrar} style={{ display: 'flex', gap: '10px' }}>
+    <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto', fontFamily: 'sans-serif' }}>
+      <h2>?? Cajero ATM - Estructura Blindada</h2>
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '10px', marginBottom: '20px' }}>
         <input name="nom" placeholder="Nombre" required />
-        <select name="prio">
-          <option value="1">1 - Crítico</option>
-          <option value="5">5 - Rutina</option>
-        </select>
-        <button type="submit">Añadir</button>
+        <input name="cant" type="number" placeholder="Monto" required />
+        <button type="submit">Ingresar a la Fila (O(n) Sort)</button>
       </form>
-      <button onClick={() => { setActual(colaRef.current.extraerMin()); refrescar(); }}>Atender</button>
-      <hr />
-      <h3>En espera: {pacientes.length}</h3>
-      <ul>{pacientes.map(p => <li key={p.id}>{p.nombre} (Prio: {p.nivel})</li>)}</ul>
+      <button onClick={() => { colaRef.current.atender(); sincronizar(); }} disabled={datos.length === 0} style={{ width: '100%', padding: '10px' }}>
+        Atender Siguiente (O(1))
+      </button>
+      <div style={{ marginTop: '20px' }}>
+        {datos.map(p => (
+          <div key={p.id} style={{ borderBottom: '1px solid #ddd', padding: '10px 0' }}>
+            <strong>{p.nombre}</strong> -  <br/>
+            <small>Llegada: {new Date(p.fecha_llegada).toLocaleTimeString()}</small>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

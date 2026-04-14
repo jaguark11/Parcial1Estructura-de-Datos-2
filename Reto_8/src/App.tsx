@@ -1,0 +1,1 @@
+﻿import { Sidebar } from './components/Sidebar'; export default function App() { return <div style={{ display: 'flex', background: '#000', color: '#fff' }}><Sidebar /><main style={{ padding: '20px' }}><h1>Sistema Listo</h1></main></div>; }

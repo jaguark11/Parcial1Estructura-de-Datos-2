@@ -1,0 +1,39 @@
+@function sangriaJerarquia($nivel) {
+  @return $nivel * 15px;
+}
+
+$color-fondo: #1e1e1e;
+$color-borde: #555;
+$color-acento: #e74c3c;
+
+body {
+  background-color: $color-fondo;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+.nodo-arbol {
+  margin-left: sangriaJerarquia(1);
+  border-left: 1px solid $color-borde;
+  padding: 4px;
+
+  .fila-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .icono-asset {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .btn-accion {
+      background: #333;
+      color: white;
+      border: 1px solid $color-borde;
+      cursor: pointer;
+      &:hover { background: #555; }
+    }
+  }
+}
